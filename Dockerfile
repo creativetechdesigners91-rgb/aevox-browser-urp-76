@@ -1,16 +1,22 @@
-# Use Microsoft's official pre-built production container for Playwright
-FROM ://microsoft.com
+# Pull clean, pre-compiled python stable image directly from Docker Hub 
+FROM python:3.11-bookworm
 
 WORKDIR /app
 
-# Ensure pip is up to date inside the container
+# Ensure local core library parameters are fully up to date
 RUN pip install --no-cache-dir --upgrade pip
 
 # Copy and install only your Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Port over your main browser code file (playwright binaries are already inside!)
+# --- THE FIX: Download the standalone chromium engine layout inside python environment ---
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers
+RUN playwright install chromium
+RUN playwright install-deps chromium
+# -----------------------------------------------------------------------------------------
+
+# Port over your main browser code file
 COPY app.py .
 
 EXPOSE 8501
