@@ -1,12 +1,15 @@
-# Match your local system running Python 3.14
-FROM python:3.14-slim
+# Down grade the cloud container engine to a stable production version
+FROM python:3.11-slim
 
 WORKDIR /app
+
+# Upgrade pip to ensure secure dependency mapping
+RUN pip install --no-cache-dir --upgrade pip
 
 # Copy dependency records
 COPY requirements.txt .
 
-# Install packages via pip
+# Install packages via pip cleanly
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Download and configure standalone browser binaries for Playwright
