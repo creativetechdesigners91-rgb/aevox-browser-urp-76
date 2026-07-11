@@ -1,22 +1,16 @@
-# Down grade the cloud container engine to a stable production version
-FROM python:3.11-slim
+# Use Microsoft's official pre-built production container for Playwright
+FROM ://microsoft.com
 
 WORKDIR /app
 
-# Upgrade pip to ensure secure dependency mapping
+# Ensure pip is up to date inside the container
 RUN pip install --no-cache-dir --upgrade pip
 
-# Copy dependency records
+# Copy and install only your Python dependencies
 COPY requirements.txt .
-
-# Install packages via pip cleanly
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download and configure standalone browser binaries for Playwright
-RUN playwright install chromium
-RUN playwright install-deps chromium
-
-# Port over the browser code file
+# Port over your main browser code file (playwright binaries are already inside!)
 COPY app.py .
 
 EXPOSE 8501
