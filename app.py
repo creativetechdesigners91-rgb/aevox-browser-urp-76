@@ -2,25 +2,33 @@ import streamlit as st
 import asyncio
 from playwright.async_api import async_playwright
 
+# Set up the web canvas layout configuration
 st.set_page_config(page_title="Aevox Browser", layout="wide", page_icon="🌐")
-st.title("🌐 Aevox Browser (Unblocked Engine)")
+st.title("🌐 Aevox Browser")
 
+# Initialize persistent background variables
 if "url" not in st.session_state:
     st.session_state.url = "https://google.com"
 if "screenshot" not in st.session_state:
     st.session_state.screenshot = None
 
+# Custom styling to make the webpage images look like a smooth browser canvas
 st.markdown("""
     <style>
     .stImage > img { border: 2px solid #333; border-radius: 8px; width: 100%; }
     </style>
 """, unsafe_allowed_items=True)
 
+# URL Address input bar
 url_input = st.text_input("Enter URL Address:", value=st.session_state.url)
 
 async def capture_web_page(target_url):
+    """Launches an unblocked background sandbox browser to render forbidden websites."""
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+        )
         context = await browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             viewport={"width": 1280, "height": 800}
@@ -31,12 +39,13 @@ async def capture_web_page(target_url):
             screenshot_bytes = await page.screenshot(type="jpeg", quality=80)
             return screenshot_bytes
         except Exception as e:
-            st.error(f"Failed to load page: {str(e)}")
+            st.error(f"Aevox could not resolve page: {str(e)}")
             return None
         finally:
             await context.close()
             await browser.close()
 
+# Process navigation changes automatically
 if url_input != st.session_state.url or st.session_state.screenshot is None:
     if not url_input.startswith("http"):
         url_input = "https://" + url_input
@@ -47,6 +56,7 @@ if url_input != st.session_state.url or st.session_state.screenshot is None:
         if img_data:
             st.session_state.screenshot = img_data
 
+# Display the rendering output
 if st.session_state.screenshot:
     st.image(st.session_state.screenshot, caption=f"Live View: {st.session_state.url}")
     
