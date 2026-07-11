@@ -1,22 +1,21 @@
-# Pull clean, pre-compiled python stable image directly from Docker Hub 
-FROM python:3.11-bookworm
+# Use an image fully pre-configured for web apps
+FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
-# Ensure local core library parameters are fully up to date
-RUN pip install --no-cache-dir --upgrade pip
+# Install only essential font libraries so text can render on the canvas
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fonts-liberation \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy and install only your Python dependencies
+# Install packages
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- THE FIX: Download the standalone chromium engine layout inside python environment ---
+# Download isolated cloud-safe binaries for Playwright
 ENV PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers
 RUN playwright install chromium
-RUN playwright install-deps chromium
-# -----------------------------------------------------------------------------------------
 
-# Port over your main browser code file
 COPY app.py .
 
 EXPOSE 8501
