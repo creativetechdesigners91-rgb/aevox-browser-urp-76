@@ -4,6 +4,7 @@ import streamlit as st
 
 # Tell Playwright exactly where the pre-downloaded browser lives
 os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "/app/pw-browsers"
+os.environ["PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS"] = "1"
 
 st.set_page_config(page_title="Aevox Browser", layout="wide", page_icon="🌐")
 st.title("🌐 Aevox Browser")
@@ -25,10 +26,15 @@ async def capture_web_page(target_url):
     from playwright.async_api import async_playwright
     async with async_playwright() as p:
         try:
-            # Launch without a heavy sandbox layer to run fast on free cloud tiers
+            # Force launch using clean execution parameters
             browser = await p.chromium.launch(
                 headless=True,
-                args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+                args=[
+                    "--no-sandbox", 
+                    "--disable-setuid-sandbox", 
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu"
+                ]
             )
             context = await browser.new_context(
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -36,15 +42,15 @@ async def capture_web_page(target_url):
             )
             page = await context.new_page()
             
-            # Fast timeout prevents the spinning loop from freezing
-            await page.goto(target_url, timeout=10000, wait_until="commit")
+            # Use fixed timeout structure
+            await page.goto(target_url, timeout=15000, wait_until="commit")
             screenshot_bytes = await page.screenshot(type="jpeg", quality=80)
             
             await context.close()
             await browser.close()
             return screenshot_bytes
         except Exception as e:
-            st.error(f"Engine connection lag. Please try refreshing. Details: {str(e)}")
+            st.error(f"Engine connection lag. Details: {str(e)}")
             return None
 
 # Trigger capture loop
